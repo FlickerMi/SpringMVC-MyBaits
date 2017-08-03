@@ -10,3 +10,5 @@
 5. 校验器
 6. 文件上传
 7. MyBatis-generatorConfig
+
+Url:https://github.com/FlickerMi/SpringMVC-MyBaits
