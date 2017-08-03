@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd">
+
+    <description>Spring公共配置 </description>
+
+    <!-- 包扫描,spring管理dao、service层 -->
+    <context:component-scan base-package="cn.notemi" use-default-filters="true"/>
+
+    <!-- 1.引入数据库配置文件 -->
+    <context:property-placeholder location="classpath:db.properties"/>
+
+    <!-- 2.配置C3P0 数据源 -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="driverClass" value="${jdbc.driver}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="initialPoolSize" value="${jdbc.initialPoolSize}"/>
+        <property name="maxPoolSize" value="${jdbc.maxPoolSize}"/>
+    </bean>
+
+    <!-- 3.配置 SqlSessionFactory -->
+    <!-- 配置mybatis -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 加载数据源 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 自动扫描entity目录 -->
+        <property name="typeAliasesPackage" value="cn.notemi.entity" />
+        <!-- 加载mybatis的配置文件 -->
+        <property name="configLocation" value="classpath:mybatis/sqlMapConfig.xml"/>
+        <!-- 扫描mapper.xml位置-->
+        <property name="mapperLocations" value="classpath*:cn/notemi/mapper/*.xml" />
+    </bean>
+
+    <!-- 4.配置mapper 扫描器 -->
+    <!-- 通过MapperScannerConfigurer进行mapper扫描（建议使用）
+        mapper 批量扫描，从 mapper 包中扫描出 mapper 接口，自动创建代理对象，并在 spring 容器中注册名陈为类名首字母小写。
+        遵循的规范：将 mapper.java 和 mapper.xml 映射文件名称一致，且在同一个目录。-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 指定扫描的包，如果存在多个包使用(逗号,)分割 -->
+        <property name="basePackage" value="cn.notemi.mapper" />
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+    </bean>
+
+    <!-- 1.配置事务管理器 TransactionManager -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--配置数据源，这里的dataSouce配置在dao.xml-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 2.配置通知 -->
+    <tx:advice id="interceptorAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="delete*" propagation="REQUIRED" />
+            <tx:method name="update*" propagation="REQUIRED" />
+            <tx:method name="insert*" propagation="REQUIRED" />
+
+            <tx:method name="find*" propagation="SUPPORTS" read-only="true" />
+            <tx:method name="get*" propagation="SUPPORTS" read-only="true" />
+            <tx:method name="select*" propagation="SUPPORTS" read-only="true" />
+        </tx:attributes>
+    </tx:advice>
+
+    <!-- 3.配置切面 aop -->
+    <aop:config>
+        <aop:advisor advice-ref="interceptorAdvice" pointcut="execution(* cn.notemi.service.impl.*.*(..))"/>
+    </aop:config>
+</beans>

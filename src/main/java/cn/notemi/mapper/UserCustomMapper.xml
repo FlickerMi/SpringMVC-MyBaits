@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.notemi.mapper.UserCustomMapper" >
+
+  <!-- 定义商品查询的sql片段，就是商品查询条件 -->
+  <sql id="query_user_where">
+    <!-- 使用动态sql，通过if判断，满足条件进行sql拼接 -->
+    <!-- 商品查询条件通过ItemsQueryVo包装对象 中itemsCustom属性传递 -->
+    <if test="userCustom!=null">
+      <if test="userCustom.username!=null and userCustom.username!=''">
+        user.username LIKE '%${userCustom.username}%'
+      </if>
+    </if>
+  </sql>
+
+  <!-- 列表查询 -->
+  <!-- parameterType传入包装对象(包装了查询条件)
+      resultType建议使用扩展对象-->
+  <select id="selectByUsername" parameterType="cn.notemi.po.UserQueryVo" resultType="cn.notemi.po.UserCustom">
+    select * from user where
+    <trim suffixOverrides=" and ">
+      <if test="userCustom.id != null">
+        id = #{userCustom.id,jdbcType=INTEGER} and
+      </if>
+      <if test="userCustom.username != null">
+        username = #{userCustom.username,jdbcType=VARCHAR} and
+      </if>
+      <if test="userCustom.password != null">
+        password = #{userCustom.password,jdbcType=VARCHAR} and
+      </if>
+      <if test="userCustom.email != null">
+        email = #{userCustom.email,jdbcType=VARCHAR} and
+      </if>
+    </trim>
+
+  </select>
+  <!--根据条件查询用户所有信息-->
+  <select id="selectChoose" parameterType="cn.notemi.po.UserQueryVo" resultType="cn.notemi.po.UserCustom">
+    select * from user where
+    <trim suffixOverrides=" and ">
+      <if test="userCustom.id != null">
+        id = #{userCustom.id,jdbcType=INTEGER} and
+      </if>
+      <if test="userCustom.username != null">
+        username = #{userCustom.username,jdbcType=VARCHAR} and
+      </if>
+      <if test="userCustom.password != null">
+        password = #{userCustom.password,jdbcType=VARCHAR} and
+      </if>
+      <if test="userCustom.email != null">
+        email = #{userCustom.email,jdbcType=VARCHAR} and
+      </if>
+    </trim>
+  </select>
+  <!--根据条件查询用户所有信息-->
+  <select id="selectChooseList" parameterType="cn.notemi.po.UserQueryVo" resultType="cn.notemi.po.UserCustom">
+    SELECT user.* FROM user
+    <where>
+      <include refid="query_user_where"></include>
+    </where>
+  </select>
+</mapper>
